@@ -92,6 +92,7 @@ try {
     await expect(page.locator(".condition-row").first()).toContainText("AI解释");
     await page.getByRole("button", { name: "确认并运行筛选" }).click();
     await page.waitForURL("**/results");
+    await expect(page.locator(".panel table thead th")).toHaveText(["股票", "营业收入同比增长率", "PB MRQ", "结果", "证据"]);
     const liveCounts = (await page.locator(".summary-strip strong").allTextContents()).map(Number);
     expect(liveCounts[0]).toBe(300);
     expect(liveCounts[1]! + liveCounts[2]! + liveCounts[3]!).toBe(300);
