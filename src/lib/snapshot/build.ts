@@ -8,6 +8,7 @@ import { createFinanceRequester, type Capture, type RequestFailure } from "../fi
 import { financialMetrics, valuationMetrics, volatilityMetric, type StockIdentity } from "../finance/normalizers";
 import { ProviderCalendarSchema, ProviderConstituentsSchema, ProviderValuationsSchema } from "../finance/provider-schemas";
 import { saveSnapshot } from "./store";
+import { verifySnapshotEvidence } from "./evidence";
 
 type Failure = RequestFailure;
 export type CoverageReport = {
@@ -94,6 +95,7 @@ export async function buildMarketSnapshot(reportInput: string, onProgress: (mess
     constituent_as_of: new Date(memberData.timestamp).toISOString(),
     constituent_evidence: { path: memberCapture.relative_path, sha256: memberCapture.sha256, field: "item[]" },
     expected_count: 300, status, issues, stocks: rows });
+  await verifySnapshotEvidence(snapshot);
   const coverage: CoverageReport = { snapshot_id: snapshotId, status, stock_count: rows.length,
     metric_non_null: metricNonNull, metric_unknown: metricUnknown, api_failure_count: failures.length,
     api_failures: failures, retry_count: retries, duration_ms: Date.now() - started, built_at: builtAt,

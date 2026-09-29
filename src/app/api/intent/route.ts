@@ -2,7 +2,7 @@ import { z } from "zod";
 import { interpretNaturalLanguage } from "@/lib/ai/interpret";
 import { llmConfigured } from "@/lib/ai/provider";
 import { presetIntent } from "@/domain/preset-intent";
-import { enforceTemporalIntent, unmetTemporalRequirements } from "@/domain/temporal-intent";
+import { enforceTemporalIntent, hasTemporalMention } from "@/domain/temporal-intent";
 import { JsonBodyError, readJsonBody } from "@/lib/http/json";
 import { loadSnapshot } from "@/lib/snapshot/store";
 
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (!llmConfigured()) return Response.json({ error: "真实LLM尚待配置；此描述包含预设以外的要求，未套用默认条件。可使用完整示例或配置模型后重试。" }, { status: 503 });
     const intent = await interpretNaturalLanguage(input.original_query);
     // Only time-bearing queries need the snapshot here; all screening uses the same validated store.
-    if (!unmetTemporalRequirements(input.original_query, null, null).length) return Response.json({ interpreter: "llm", intent });
+    if (!hasTemporalMention(input.original_query)) return Response.json({ interpreter: "llm", intent });
     const snapshot = await loadSnapshot();
     return Response.json({ interpreter: "llm", intent: enforceTemporalIntent(intent,
       snapshot?.market_date ?? null, snapshot?.report_period ?? null) });
