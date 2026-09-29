@@ -19,14 +19,17 @@ Agent辅助阅读题目、检查已安装的`hithink-finance` Skill与真实接�
 | 预设匹配过宽会吞掉附加要求 | 改为完整句子匹配；“不要银行”“保证涨停”等附加要求会进入模型解释，模型未配置时明确报错 |
 | 模型可能伪称用户手填或遗漏冲突 | 严格校验`origin`、假设确认状态和同指标确定性冲突；非法结果拒绝而不进入筛选 |
 | “今天PE”被解释为普通PE条件 | 加入独立时间约束检查；若快照不是今天，意图显示不支持且筛选接口拒绝运行 |
+| ISO日期、年报简写遗漏及“不要求今天”被误拦 | 扩充确定性时间识别并处理明确否定；用真实DeepSeek接口复验旧日期、旧财报期均待澄清，放弃今天要求可执行；模型和程序重复的时间提示已合并 |
 | 模型虚构用户未提出的隐含限制 | 不支持项必须引用用户原话；不合格时最多重试一次，仍不合格则明确解析失败 |
 | 同日重建可能复用不同窗口的缓存 | 缓存元数据绑定请求参数与响应校验值；估值每次构建重新取数 |
+| 同日刷新可能覆盖旧快照原始证据 | 新响应落在按请求及内容哈希命名的独立文件，缓存索引保留获取时间；发布新快照前逐个校验原始引用。三份真实快照全部引用无缺失及哈希错误 |
+| 实际供应商429未进入重试 | 首轮刷新记录5次`UPSTREAM_HTTP_429`且UNKNOWN未填；补上实际错误码的有界退避，续跑成功，未把测试中的退避模拟称为真实供应商恢复验证 |
 
 这些均为Agent与程序交叉检查，不替代候选人本人的判断。原始响应保存在Git忽略的`data/verification/`，逐条核验在本地`artifacts/finance-crosscheck-5.json`。
 
 ## 已执行与未执行
 
-最新工程检查：lint、typecheck、36项测试、build通过；本机Playwright主链路通过。真实沪深300快照含300只股票，七指标覆盖见`data/snapshots/<snapshot-id>-coverage.json`。测试细节见[TEST_PLAN.md](TEST_PLAN.md)。
+最新工程检查：lint、typecheck、40项测试、build、release:check通过；干净检出`npm ci`及lint/typecheck/test/build通过。本机Playwright在2026-09-29新真实快照上完成主链路，无页面错误。七指标覆盖见`data/snapshots/<snapshot-id>-coverage.json`。测试细节见[TEST_PLAN.md](TEST_PLAN.md)。
 
 真实模型验证：DeepSeek `deepseek-flash`将非预设“营收同比至少8%、PB不高于2倍”解析为两项条件；浏览器用本地真实快照筛出300只中62只PASS、238只FAIL、0只UNKNOWN。另测“保证明天涨停”标为`compliance_boundary`，“不要银行”标为当前股票池不支持；两者均要求澄清。记录在本地`artifacts/phase3-llm-e2e.json`及`artifacts/acceptance/browser.json`。密钥位于Git忽略的本机服务器环境文件，且已按用户明确授权添加为Vercel生产Secret；未写入源码、测试产物或仓库。
 
