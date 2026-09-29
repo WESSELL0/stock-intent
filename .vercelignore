@@ -1,0 +1,9 @@
+# User has not authorized publishing real financial data.
+data/
+artifacts/
+.env*
+!.env.example
+node_modules/
+.next/
+*.log
+.DS_Store

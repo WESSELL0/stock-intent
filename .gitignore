@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example
+data/*
+!data/README.md
+artifacts/*
+!artifacts/README.md
+.DS_Store
+*.log
+.vercel
