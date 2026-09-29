@@ -1,12 +1,14 @@
 # AI使用与验证记录
 
-更新：2026-09-29。执行者为Codex Agent；候选人本人尚未完成最终人工复核。产品内DeepSeek真实模型已在本机及公网调用成功，但少量样本不能证明任意自然语言都能正确理解。
+更新：2026-09-29。执行者为Codex Agent；以下把候选人通过对话给出的修正与Agent实施、测试分开记录。产品内DeepSeek真实模型已在本机及公网调用成功，但少量样本不能证明任意自然语言都能正确理解。
 
 ## AI参与和职责边界
 
 Agent辅助阅读题目、检查已安装的`hithink-finance` Skill与真实接口、编写Next.js/TypeScript/Zod代码、测试及文档，并执行命令和浏览器验收。产品运行时，完整预设短语由显式规则解释；其他输入由服务端DeepSeek解释。模型只能输出可校验的意图JSON，不能计算金融指标或决定股票PASS/FAIL；后两者由确定性程序完成。
 
 ## 发现、纠错和复核
+
+候选人通过本次协作明确要求：把原“合并净利润同比”改为供应商实际提供的“归母净利润同比”，并抽查五只不同行业股票的原值；保留UNKNOWN与API错误而不填模拟值；允许合格的partial快照；在真实数据与确定性主链路跑通后才接模型。这些是可追溯的人工方向和纠错要求。代码、数据核验及浏览器操作由Agent执行；没有把Agent点击网页写成候选人亲自点击。
 
 | 初始问题 | 实测与修正 |
 |---|---|
@@ -25,7 +27,7 @@ Agent辅助阅读题目、检查已安装的`hithink-finance` Skill与真实接�
 | 同日刷新可能覆盖旧快照原始证据 | 新响应落在按请求及内容哈希命名的独立文件，缓存索引保留获取时间；发布新快照前逐个校验原始引用。三份真实快照全部引用无缺失及哈希错误 |
 | 实际供应商429未进入重试 | 首轮刷新记录5次`UPSTREAM_HTTP_429`且UNKNOWN未填；补上实际错误码的有界退避，续跑成功，未把测试中的退避模拟称为真实供应商恢复验证 |
 
-这些均为Agent与程序交叉检查，不替代候选人本人的判断。原始响应保存在Git忽略的`data/verification/`，逐条核验在本地`artifacts/finance-crosscheck-5.json`。
+这些是Agent与程序交叉检查；候选人对供应商口径和产品边界的指示见上文，最终观看成品和提交仍由候选人决定。原始响应保存在Git忽略的`data/verification/`，逐条核验在本地`artifacts/finance-crosscheck-5.json`。
 
 ## 已执行与未执行
 
@@ -33,4 +35,6 @@ Agent辅助阅读题目、检查已安装的`hithink-finance` Skill与真实接�
 
 真实模型验证：DeepSeek `deepseek-flash`将非预设“营收同比至少8%、PB不高于2倍”解析为两项条件；浏览器用本地真实快照筛出300只中62只PASS、238只FAIL、0只UNKNOWN。另测“保证明天涨停”标为`compliance_boundary`，“不要银行”标为当前股票池不支持；两者均要求澄清。记录在本地`artifacts/phase3-llm-e2e.json`及`artifacts/acceptance/browser.json`。密钥位于Git忽略的本机服务器环境文件，且已按用户明确授权添加为Vercel生产Secret；未写入源码、测试产物或仓库。
 
-公网验证：2026-09-29，修复版与新快照发布后，Playwright在[生产地址](https://stock-intent.vercel.app)通过预设编辑、PASS/FAIL/UNKNOWN证据、同快照条件变化、真实DeepSeek非预设解析和异常HTTP请求测试；无页面错误。线上健康回读证实快照ID为`snap-2026-09-29-2026-2-4f5db3320b0d`。[源代码仓库](https://github.com/WESSELL0/stock-intent)已公开。未完成：广泛提示词效果评测及候选人本人最终逐项签核。
+公网验证：2026-09-29，修复版与新快照发布后，Playwright在[生产地址](https://stock-intent.vercel.app)通过预设编辑、PASS/FAIL/UNKNOWN证据、同快照条件变化、真实DeepSeek非预设解析和异常HTTP请求测试；无页面错误。线上健康回读证实快照ID为`snap-2026-09-29-2026-2-4f5db3320b0d`。[源代码仓库](https://github.com/WESSELL0/stock-intent)已公开。原题要求记录候选人修正过的问题，并未要求签字式人工验收；广泛提示词效果评测仍属已知边界。
+
+额外的页面走查已查看最终公网截图中的意图解释、可编辑五条件、入选逐项证据、Near Miss与UNKNOWN分区，以及30→35条件比较；随后录制真实网页交互视频。走查由Agent完成，不能伪称候选人本人已观看。供应商数据展示权限的公开材料核查与未解决范围见[DATA_LICENSE_REVIEW.md](DATA_LICENSE_REVIEW.md)。

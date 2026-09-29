@@ -38,7 +38,7 @@ Next.js App Router + React + TypeScript strict + Zod。`src/domain`存放指标�
 - [官方仓库](https://github.com/HiThink-Tech/Financial-API)
 - iFinD MCP尚未接入或验证；本MVP不依赖它。
 
-本地原始数据位于 `data/verification/`，由Git忽略。公开产品只上传规范化快照，逐项证据在页面展示；原始响应和Key不进入公开仓库或`public/`。用户已明确批准这次公开展示；供应商条款下的独立再分发权限尚未核验。
+本地原始数据位于 `data/verification/`，由Git忽略。公开产品只上传规范化快照，逐项证据在页面展示；原始响应和Key不进入公开仓库或`public/`。用户已明确批准这次公开展示；供应商条款下的独立再分发权限尚未核验，见[公开材料核查记录](docs/DATA_LICENSE_REVIEW.md)。
 
 ## Metric definitions
 
@@ -162,6 +162,6 @@ GitHub仓库不含快照，不能只从仓库自动构建出可筛选的生产�
 
 ## AI usage & human verification record
 
-AI参与需求梳理、Skill/接口检查、基础代码、数据模型、文档、测试与错误诊断。工具复验包括真实CLI调用、Zod校验、Python独立复算和构建检查。候选人本人尚需人工核对关键口径和最终交互；不能把Agent自检包装成人类复核。
+AI参与需求梳理、Skill/接口检查、基础代码、数据模型、文档、测试与错误诊断。工具复验包括真实CLI调用、Zod校验、Python独立复算、浏览器主链路和构建检查。用户在协作中明确纠正了归母净利润同比口径，并要求交叉核验、UNKNOWN隔离和确定性筛选优先；这些修正与Agent实际执行的验收分别记录，不冒称候选人签核。
 
-详细记录及待人工确认事项见 [AI_USAGE.md](docs/AI_USAGE.md)。后续逐项补入实际使用的LLM模型、提示词版本、错误修正与人工验证证据。
+详细记录见 [AI_USAGE.md](docs/AI_USAGE.md)。数据公开展示许可的核查结果见 [DATA_LICENSE_REVIEW.md](docs/DATA_LICENSE_REVIEW.md)。
