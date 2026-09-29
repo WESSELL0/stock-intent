@@ -1,6 +1,6 @@
 # 条件研究室 · Stock Intent
 
-自然语言智能选股与策略解释器。本地MVP已可操作：预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化。公网部署仍待完成；自动审批要求对上传规范化快照至Vercel并公开展示作出明确批准。
+自然语言智能选股与策略解释器。公开可操作版本：[stock-intent.vercel.app](https://stock-intent.vercel.app)。支持预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化；2026-09-29已完成公网浏览器验收。
 
 详细方案见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)，真实验证见 [数据验证记录](docs/DATA_VERIFICATION.md)。
 
@@ -14,13 +14,13 @@
 
 ## Why AI / Why not rules only
 
-AI用于理解不同表达、显式提出假设、发现歧义和提出澄清。固定规则用于比较、计数、冲突检测、波动率与候选集变化。完整示例走预设并展示默认假设；包含附加要求时必须调用已配置的LLM，未配置时明确报错。DeepSeek非预设输入已在本机实测。
+AI用于理解不同表达、显式提出假设、发现歧义和提出澄清。固定规则用于比较、计数、冲突检测、波动率与候选集变化。完整示例走预设并展示默认假设；包含附加要求时必须调用已配置的LLM，未配置时明确报错。DeepSeek非预设输入已在公网实测。
 
 ## AI / deterministic engine / financial data responsibilities
 
 | 层 | 负责 | 不负责 |
 |---|---|---|
-| LLM（本机已验证DeepSeek） | 意图映射、澄清、假设解释、不支持项 | 计算指标、决定股票入选、生成股票事实 |
+| LLM（公网已验证DeepSeek） | 意图映射、澄清、假设解释、不支持项 | 计算指标、决定股票入选、生成股票事实 |
 | 确定性引擎 | 比较、三态判断、冲突、计数、集合差分 | 自行扩展用户意图 |
 | 金融数据层 | 真实成分、财务、估值、行情及证据 | 投资判断 |
 
@@ -38,7 +38,7 @@ Next.js App Router + React + TypeScript strict + Zod。`src/domain`存放指标�
 - [官方仓库](https://github.com/HiThink-Tech/Financial-API)
 - iFinD MCP尚未接入或验证；本MVP不依赖它。
 
-本地原始数据位于 `data/verification/`，由Git忽略。不得在公开仓库或`public/`暴露原始响应、Key或受限数据。发布前需核实数据展示权限。
+本地原始数据位于 `data/verification/`，由Git忽略。公开产品只上传规范化快照，逐项证据在页面展示；原始响应和Key不进入公开仓库或`public/`。用户已明确批准这次公开展示；供应商条款下的独立再分发权限尚未核验。
 
 ## Metric definitions
 
@@ -113,13 +113,13 @@ npm run snapshot:build -- --report 2026-2
 
 已有29项自动测试，覆盖指标白名单、模型传输异常、附加要求不被预设吞掉、请求体上限、金融接口重试与缓存续跑、失败刷新保留旧快照、三态筛选和波动率边界。
 
-本机生产构建可运行`npm run test:e2e`复测浏览器主链路；服务器配置DeepSeek密钥时还会测试非预设输入。2026-09-29实测记录位于本地`artifacts/acceptance/browser.json`与截图。公网运行仍未验证。
+本机生产构建可运行`npm run test:e2e`复测浏览器主链路；服务器配置DeepSeek密钥时还会测试非预设输入。2026-09-29已针对公网地址完成此验收，记录位于本地`artifacts/acceptance/browser.json`与截图。
 
 ## Deployment
 
 推荐使用支持Next.js服务端Route Handler的托管平台。发布前依次运行四项质量检查、`npm run build`和`npm run release:check`；后者验证本地真实300只成分快照和七项覆盖，并检查三个服务端路由均已追踪规范化快照且未追踪原始响应、验证产物或本机环境文件。`/api/health`实时报告快照ID、股票数、质量及LLM是否配置。应用筛选时只读取已构建的快照，不在公开请求中使用金融API Key。
 
-已关联Vercel项目，并按用户明确授权配置了`LLM_API_KEY`生产Secret。计划公开版仅将规范化的`data/snapshots/current.json`加入服务器函数追踪；`.vercelignore`继续排除原始接口响应、验证产物及本机环境文件。快照仍由Git忽略，不进入源码仓库。`vercel deploy --dry --json`清单显示上传文件中只有这一份快照；真实部署被自动审批拦下，尚无公网URL，也没有线上验收。
+已部署至[Vercel生产环境](https://stock-intent.vercel.app)，并将`LLM_API_KEY`配置为生产Secret。部署清单70个文件中仅`data/snapshots/current.json`是金融数据文件；`.vercelignore`排除原始接口响应、验证产物及本机环境文件。快照由Git忽略，不进入源码仓库。线上`/api/health`返回300只股票、正确snapshot ID及已配置模型；公网Playwright主链路通过。
 
 ## Failure handling
 
@@ -139,7 +139,7 @@ npm run snapshot:build -- --report 2026-2
 
 ## Known limitations
 
-- 远端源码仓库尚未建立；真实快照上传部署被自动审批拦下，尚无公网URL。真实LLM只验证了少量输入，不能由此推断任意描述都正确。
+- 远端源码仓库尚未建立；真实LLM只验证了少量输入，不能由此推断任意描述都正确。供应商对规范化数据公开展示的独立许可尚未核验。
 - 快照为partial；毛利率48只缺失、波动率4只缺失。历史披露日语义尚未核验，不支持回测。
 - 最新成分/最新估值不能支持无前视偏差的历史回测。
 - 供应商不提供的精确时点/报告期只能标未知。

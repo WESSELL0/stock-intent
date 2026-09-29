@@ -22,7 +22,7 @@ async function main() {
   const coverage = Object.fromEntries(METRIC_IDS.map(metric => [metric,
     snapshot.stocks.filter(row => row.metrics.some(item => item.metric === metric && item.quality === "ok" && item.value !== null)).length]));
   const ageDays = Math.floor((Date.now() - Date.parse(`${snapshot.market_date}T00:00:00+08:00`)) / 86_400_000);
-  console.log(JSON.stringify({ local_snapshot_valid: true, public_real_data_release: "prepared_pending_verification",
+  console.log(JSON.stringify({ local_snapshot_valid: true, release_artifact: "validated_locally",
     snapshot_id: snapshot.snapshot_id,
     snapshot_status: snapshot.status, stock_count: snapshot.stocks.length,
     market_date: snapshot.market_date, report_period: snapshot.report_period,

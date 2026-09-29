@@ -18,7 +18,8 @@ const browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIG
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const errors: string[] = [];
 page.on("pageerror", error => errors.push(error.message));
-const proof: Record<string, unknown> = { snapshot_id: snapshot.snapshot_id, real_llm_verified: false, checks: [] };
+const proof: Record<string, unknown> = { base_url: base, tested_at: new Date().toISOString(),
+  snapshot_id: snapshot.snapshot_id, real_llm_verified: false, checks: [] };
 const check = (name: string) => (proof.checks as string[]).push(name);
 const example = "找经营改善、估值合理、走势稳定的公司";
 try {
@@ -76,7 +77,7 @@ try {
   await page.locator("#query").fill(example + "，不要银行");
   await expect(page.locator(".condition-row")).toHaveCount(0);
   check("query edit invalidates prior parsed conditions and results");
-  const configured = await (await page.request.get(`${base}/api/intent`)).json();
+  const configured = await page.evaluate(async () => (await fetch("/api/intent")).json());
   if (!configured.configured) {
     await page.getByRole("button", { name: "解析意图", exact: true }).click();
     await expect(page.locator(".form-error[role=alert]")).toContainText("未套用默认条件");
@@ -102,10 +103,15 @@ try {
     await page.getByRole("link", { name: /意图与条件/ }).click();
     check("live DeepSeek interpretation, browser run and real snapshot evidence");
   }
-  const oversized = await page.request.post(`${base}/api/intent`, { data: { original_query: "x".repeat(17_000) } });
-  expect(oversized.status()).toBe(413);
-  const invalid = await page.request.post(`${base}/api/screen`, { data: "{invalid-json", headers: { "Content-Type": "application/json" } });
-  expect(invalid.status()).toBe(400);
+  const oversized = await page.evaluate(async () => (await fetch("/api/intent", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ original_query: "x".repeat(17_000) }),
+  })).status);
+  expect(oversized).toBe(413);
+  const invalid = await page.evaluate(async () => (await fetch("/api/screen", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: "{invalid-json",
+  })).status);
+  expect(invalid).toBe(400);
   check("live HTTP routes reject oversized and malformed requests");
 
   // UI contract tests use explicit synthetic model responses. They do not validate a real LLM.
