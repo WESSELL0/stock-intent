@@ -4,10 +4,12 @@ import { METRICS, type MetricId } from "@/domain/metrics";
 import { detectConflicts } from "@/domain/conflicts";
 import { INITIAL_PRESETS } from "@/domain/presets";
 import { NaturalLanguageIntentSchema, type Condition, type NaturalLanguageIntent } from "@/domain/schemas";
-import { needsQueryClarification } from "@/domain/preset-intent";
+import { confirmAmbiguousInterpretation, needsQueryClarification } from "@/domain/preset-intent";
 
 export type SnapshotSummary = { ready: true; snapshot_id: string; universe: string; market_date: string; report_period: string;
-  status: "ready" | "partial"; stock_count: number; built_at: string; coverage: Record<MetricId, number>; issues: string[] };
+  status: "ready" | "partial"; stock_count: number; built_at: string;
+  freshness: { evaluated_on: string; age_calendar_days: number; stale_after_days: number; date_anomaly: boolean; stale: boolean };
+  coverage: Record<MetricId, number>; issues: string[] };
 export type EvidenceView = { value: number | null; unit: "percent" | "multiple"; source: string; endpoint: string;
   as_of: string | null; as_of_semantics: string; retrieved_at: string; report_period: string | null;
   calculation_method: string; quality: string; issues: string[]; raw_fields: string[];
@@ -23,6 +25,7 @@ export type ScreenResponse = { snapshot: SnapshotSummary;
     newly_included: string[]; newly_excluded: string[]; unknown_before_count: number; unknown_after_count: number } | null };
 type Workspace = { query: string; setQuery: (value: string) => void; parsed: boolean; parsing: boolean; parseIntent: () => Promise<void>;
   intent: NaturalLanguageIntent | null; interpreter: "preset" | "llm" | null; clarificationRequired: boolean;
+  confirmInterpretation: () => void;
   conditions: Condition[]; setConditions: (conditions: Condition[]) => void; addCondition: (metric: MetricId) => void;
   snapshot: SnapshotSummary | null; snapshotError: string | null; result: ScreenResponse | null;
   running: boolean; error: string | null; run: () => Promise<boolean>; conflicts: ReturnType<typeof detectConflicts> };
@@ -53,6 +56,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, []);
   const conflicts = useMemo(() => detectConflicts(conditions), [conditions]);
   const clarificationRequired = intent ? needsQueryClarification(intent) : true;
+  const confirmInterpretation = useCallback(() => {
+    setIntent(current => current ? confirmAmbiguousInterpretation(current) : current);
+  }, []);
   const setQuery = useCallback((value: string) => {
     generation.current += 1;
     updateQuery(value); setParsed(false); setIntent(null); setInterpreter(null); setResult(null); setError(null);
@@ -94,7 +100,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "筛选失败"); return false; }
     finally { setRunning(false); }
   }, [parsed, clarificationRequired, parsing, conditions, conflicts, query, baseline]);
-  const value: Workspace = { intent, interpreter, clarificationRequired, query, setQuery, parsed, parsing, parseIntent, conditions, setConditions, addCondition,
+  const value: Workspace = { intent, interpreter, clarificationRequired, confirmInterpretation, query, setQuery, parsed, parsing, parseIntent, conditions, setConditions, addCondition,
     snapshot, snapshotError, result, running, error, run, conflicts };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

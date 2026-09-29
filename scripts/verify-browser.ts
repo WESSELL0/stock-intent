@@ -2,9 +2,10 @@ import { chromium, expect } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadSnapshot } from "../src/lib/snapshot/store";
-import { screenSnapshot } from "../src/domain/screen";
+import { nearMiss, screenSnapshot } from "../src/domain/screen";
 import { INITIAL_PRESETS } from "../src/domain/presets";
 import { presetIntent } from "../src/domain/preset-intent";
+import { snapshotSummary } from "../src/lib/snapshot/summary";
 
 const base = process.env.E2E_BASE_URL || "http://127.0.0.1:3107";
 const directory = "artifacts/acceptance";
@@ -54,6 +55,18 @@ try {
   await near.locator("tbody button").first().click();
   await expect(page.locator(".evidence-panel")).toContainText("FAIL");
   await page.screenshot({ path: join(directory, "sensitivity-35.png"), fullPage: true });
+  const completeFailures = nearMiss(run35, 300);
+  for (let shown = 40; shown < completeFailures.length; shown += 40) {
+    await near.getByRole("button", { name: "再显示40只" }).click();
+  }
+  await expect(near.locator("tbody tr")).toHaveCount(completeFailures.length);
+  await expect(near.getByRole("button", { name: "再显示40只" })).toHaveCount(0);
+  const lastExcluded = completeFailures.at(-1)!;
+  await expect(near.locator("tbody tr").last()).toContainText(lastExcluded.stock.thscode);
+  await near.locator("tbody tr").last().getByRole("button", { name: "查看证据" }).click();
+  await expect(page.locator(".evidence-panel")).toContainText(lastExcluded.stock.thscode);
+  proof.all_complete_failures_visible = completeFailures.length;
+  check("all complete-data excluded stocks expose their own FAIL evidence");
   await page.getByRole("spinbutton", { name: "valuation-cap 阈值", exact: true }).fill("100");
   await expect(page.locator(".change-description")).toContainText("<=35x");
   const screenResponse = page.waitForResponse(response => response.url().endsWith("/api/screen") && response.request().method() === "POST");
@@ -125,12 +138,18 @@ try {
     if (contract === "unsupported") {
       intent.needs_clarification = true;
       intent.unsupported_requests = [{ phrase: "不要银行", reason: "metric_not_supported", explanation: "行业筛选暂未支持（合成UI测试）" }];
+      intent.conflicts = [{ condition_ids: ["risk-cap"], kind: "ambiguous_definition", explanation: "走势稳定的定义待确认" }];
+    }
+    if (contract === "ambiguous") {
+      intent.needs_clarification = true;
+      intent.conflicts = [{ condition_ids: ["risk-cap"], kind: "ambiguous_definition", explanation: "走势稳定的定义待确认" }];
     }
     await route.fulfill({ json: { interpreter: "llm", intent } });
   });
   await page.getByRole("button", { name: "解析意图", exact: true }).click();
   await expect(page.getByRole("region", { name: "意图解释与澄清" })).toContainText("行业筛选暂未支持");
   await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "确认按当前条件理解" })).toHaveCount(0);
   await expect(page.locator(".condition-row").first()).toContainText("AI解释");
   await page.getByRole("spinbutton", { name: "valuation-cap 阈值", exact: true }).fill("35");
   await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeDisabled();
@@ -140,7 +159,24 @@ try {
   await page.getByRole("button", { name: "解析意图", exact: true }).click();
   await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeEnabled();
   check("synthetic UI contract: clarified intent becomes executable");
+  contract = "ambiguous";
+  await page.locator("#query").fill("合成UI测试：稳定的定义");
+  await page.getByRole("button", { name: "解析意图", exact: true }).click();
+  await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeDisabled();
+  await page.getByRole("button", { name: "确认按当前条件理解" }).click();
+  await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeEnabled();
+  await expect(page.getByRole("region", { name: "意图解释与澄清" })).toContainText("已确认当前条件");
+  check("synthetic UI contract: explicit user confirmation resolves only disclosed ambiguity");
   await page.unroute("**/api/intent");
+  const staleSummary = snapshotSummary(snapshot);
+  await page.route("**/api/snapshot", async route => route.fulfill({ json: { ...staleSummary,
+    freshness: { evaluated_on: "2026-10-06", age_calendar_days: 8,
+      stale_after_days: 3, date_anomaly: false, stale: true } } }));
+  await page.goto(base, { waitUntil: "networkidle" });
+  await expect(page.getByRole("region", { name: "数据状态" })).toContainText("过期快照");
+  await expect(page.getByRole("region", { name: "数据状态" })).toContainText("STALE");
+  await page.unroute("**/api/snapshot");
+  check("synthetic UI contract: old snapshot displays a prominent dated warning");
   expect(errors).toEqual([]);
   proof.page_errors = errors;
   proof.all_checks_pass = true;

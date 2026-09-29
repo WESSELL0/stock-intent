@@ -21,3 +21,17 @@ export function needsQueryClarification(intent: NaturalLanguageIntent): boolean 
   return intent.unsupported_requests.length > 0 || intent.conflicts.some(item => item.kind !== "contradictory_bounds") ||
     (intent.needs_clarification && !intent.conflicts.length);
 }
+
+/** An explicit user click may accept a fully disclosed default, never an unsupported request. */
+export function canConfirmAmbiguousInterpretation(intent: NaturalLanguageIntent): boolean {
+  return intent.conditions.length > 0 && intent.unsupported_requests.length === 0 && intent.conflicts.length > 0 &&
+    intent.conflicts.every(item => item.kind === "ambiguous_definition" &&
+      item.condition_ids.every(id => intent.assumptions.some(assumption => assumption.condition_ids.includes(id))));
+}
+
+export function confirmAmbiguousInterpretation(intent: NaturalLanguageIntent): NaturalLanguageIntent {
+  if (!canConfirmAmbiguousInterpretation(intent)) throw new Error("CLARIFICATION_NOT_CONFIRMABLE");
+  return NaturalLanguageIntentSchema.parse({ ...intent,
+    assumptions: intent.assumptions.map(item => ({ ...item, acknowledged: true })),
+    conflicts: [], needs_clarification: false });
+}

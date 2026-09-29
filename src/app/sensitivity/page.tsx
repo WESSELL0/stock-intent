@@ -9,6 +9,7 @@ import { useWorkspace } from "@/components/workspace-context";
 export default function SensitivityPage() {
   const { result, run, running, conditions, conflicts, error } = useWorkspace();
   const [selected, setSelected] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(40);
   if (!result) return <><div className="page-heading"><p className="eyebrow">EXCLUDED & SENSITIVITY</p><h1>排除与条件变化</h1></div><DataStatus /><section className="panel"><p>请先运行一次筛选，再查看排除原因和条件变化。</p><Link className="text-link" href="/">返回条件编辑器</Link></section></>;
   const byCode = new Map(result.results.map(row => [row.stock.thscode, row]));
   const nearMiss = result.near_miss_codes.map(code => byCode.get(code)!).filter(Boolean);
@@ -35,12 +36,13 @@ export default function SensitivityPage() {
     </section>}
     <section className="panel" aria-label="Near Miss"><div className="section-title"><div><h2>Near Miss · 数据完整的排除股票</h2><p>按失败条件数量升序，再按股票代码稳定排序；缺失数据不会进入此表。</p></div><span className="badge">{nearMiss.length}只</span></div>
       <div className="table-scroll"><table><thead><tr><th>股票</th><th>满足条件</th><th>未通过原因</th><th>证据</th></tr></thead><tbody>
-        {nearMiss.slice(0, 40).map(row => <tr key={row.stock.thscode}><td><strong>{row.stock.name}</strong><small className="code">{row.stock.thscode}</small></td>
+        {nearMiss.slice(0, visibleCount).map(row => <tr key={row.stock.thscode}><td><strong>{row.stock.name}</strong><small className="code">{row.stock.thscode}</small></td>
           <td>{result.applied_conditions.length - row.failed_condition_count}/{result.applied_conditions.length}</td>
           <td className="failure-reason">{row.condition_results.filter(item => item.status === "FAIL").map(item => `${item.condition.metric_label} ${formatMetric(item.actual_value, item.condition.unit)}，要求${item.condition.operator}${formatMetric(item.condition.threshold, item.condition.unit)}`).join("；")}</td>
           <td><button className="subtle-button" onClick={() => setSelected(row.stock.thscode)}>查看证据</button></td></tr>)}
       </tbody></table></div>
-      {nearMiss.length > 40 && <p className="muted">显示前40只；排序使用完整数据。</p>}
+      {nearMiss.length > visibleCount && <div className="row"><p className="muted">已显示{visibleCount}/{nearMiss.length}只；继续展开可查看全部排除证据。</p>
+        <button className="secondary-button" onClick={() => setVisibleCount(count => count + 40)}>再显示40只</button></div>}
     </section>
     <section className="panel" aria-label="Unknown Data"><div className="section-title"><div><h2>Unknown Data · 存在无法判断的数据</h2><p>这类股票不列为Near Miss；若同时有已知失败项，整体状态按FAIL规则处理。</p></div><span className="badge warning">{unknown.length}只</span></div>
       {unknown.length ? <div className="table-scroll"><table><thead><tr><th>股票</th><th>整体状态</th><th>缺失条件及原因</th><th>证据</th></tr></thead><tbody>

@@ -1,5 +1,6 @@
 import { llmConfigured } from "@/lib/ai/provider";
 import { loadSnapshot } from "@/lib/snapshot/store";
+import { snapshotFreshness } from "@/lib/snapshot/freshness";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export async function GET() {
     return Response.json({ status: snapshot.status, screening_ready: true,
       snapshot_id: snapshot.snapshot_id, stock_count: snapshot.stocks.length,
       market_date: snapshot.market_date, report_period: snapshot.report_period,
+      freshness: snapshotFreshness(snapshot.market_date),
       llm_configured: llmConfigured() });
   } catch {
     return Response.json({ status: "error", screening_ready: false,

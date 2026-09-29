@@ -11,6 +11,10 @@ export function parseModelIntent(text: string, originalQuery: string): NaturalLa
       parsed.assumptions.some(assumption => assumption.acknowledged)) throw new Error("LLM_INTENT_SCHEMA_INVALID");
   const deterministicConflicts = detectConflicts(parsed.conditions);
   if (!deterministicConflicts.length) return parsed;
+  const newConflicts = deterministicConflicts.filter(next => !parsed.conflicts.some(existing =>
+    existing.kind === next.kind && existing.condition_ids.length === next.condition_ids.length &&
+    next.condition_ids.every(id => existing.condition_ids.includes(id))));
+  if (!newConflicts.length) return parsed;
   return NaturalLanguageIntentSchema.parse({ ...parsed,
-    conflicts: [...parsed.conflicts, ...deterministicConflicts], needs_clarification: true });
+    conflicts: [...parsed.conflicts, ...newConflicts], needs_clarification: true });
 }

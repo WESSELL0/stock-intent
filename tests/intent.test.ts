@@ -34,3 +34,11 @@ test("deterministic conflict is added without dropping model ambiguity", () => {
   assert.equal(parsed.conflicts[1]?.kind, "contradictory_bounds");
   assert.equal(parsed.needs_clarification, true);
 });
+test("provider and deterministic reports of the same bound conflict appear once", () => {
+  const lower = { ...condition, id: "ai-pe-floor", operator: ">" as const, threshold: 30 };
+  const modelConflict = { condition_ids: [lower.id, condition.id], kind: "contradictory_bounds",
+    explanation: "两个市盈率阈值不可同时满足" };
+  const parsed = parseModelIntent(JSON.stringify({ ...intent, conditions: [condition, lower],
+    conflicts: [modelConflict], needs_clarification: true }), query);
+  assert.equal(parsed.conflicts.length, 1);
+});
