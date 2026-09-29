@@ -162,6 +162,6 @@ GitHub仓库不含快照，不能只从仓库自动构建出可筛选的生产�
 
 ## AI usage & human verification record
 
-AI参与需求梳理、Skill/接口检查、基础代码、数据模型、文档、测试与错误诊断。工具复验包括真实CLI调用、Zod校验、Python独立复算、浏览器主链路和构建检查。用户在协作中明确纠正了归母净利润同比口径，并要求交叉核验、UNKNOWN隔离和确定性筛选优先；这些修正与Agent实际执行的验收分别记录，不冒称候选人签核。
+本项目把AI嵌入“定义边界→验证真实能力→实现→数据与程序复核→浏览器验收”的研发闭环。Codex Agent负责实现和检查，DeepSeek只解释非预设自然语言；股票事实、PASS/FAIL和条件变化由真实快照与确定性程序给出。用户明确纠正归母净利润同比口径，并要求原值交叉核验、UNKNOWN隔离和确定性筛选优先；这些人工取舍与Agent的实际验收分别记录，不冒称候选人签核。
 
 详细记录见 [AI_USAGE.md](docs/AI_USAGE.md)。数据公开展示许可的核查结果见 [DATA_LICENSE_REVIEW.md](docs/DATA_LICENSE_REVIEW.md)。
