@@ -25,6 +25,6 @@ Agent辅助阅读题目、检查已安装的`hithink-finance` Skill与真实接�
 
 最新工程检查：lint、typecheck、29项测试、build通过；本机Playwright主链路通过。真实沪深300快照含300只股票，七指标覆盖见`data/snapshots/<snapshot-id>-coverage.json`。测试细节见[TEST_PLAN.md](TEST_PLAN.md)。
 
-真实模型验证：DeepSeek `deepseek-flash`将非预设“营收同比至少8%、PB不高于2倍”解析为两项条件；浏览器用本地真实快照筛出300只中62只PASS、238只FAIL、0只UNKNOWN。另测“保证明天涨停”标为`compliance_boundary`，“不要银行”标为当前股票池不支持；两者均要求澄清。记录在本地`artifacts/phase3-llm-e2e.json`及`artifacts/acceptance/browser.json`。密钥只在Git忽略的本机服务器环境文件中，未写入源码、测试产物或仓库。
+真实模型验证：DeepSeek `deepseek-flash`将非预设“营收同比至少8%、PB不高于2倍”解析为两项条件；浏览器用本地真实快照筛出300只中62只PASS、238只FAIL、0只UNKNOWN。另测“保证明天涨停”标为`compliance_boundary`，“不要银行”标为当前股票池不支持；两者均要求澄清。记录在本地`artifacts/phase3-llm-e2e.json`及`artifacts/acceptance/browser.json`。密钥位于Git忽略的本机服务器环境文件，且已按用户明确授权添加为Vercel生产Secret；未写入源码、测试产物或仓库。
 
-未完成：广泛提示词效果评测、公网浏览器验收、候选人本人最终逐项签核。用户选择暂不公开真实金融数据，因此Vercel项目仅关联，未发布产品；没有公网URL。
+未完成：广泛提示词效果评测、公网浏览器验收、候选人本人最终逐项签核。Vercel真实快照上传被自动审批拦下，未发布产品；没有公网URL。

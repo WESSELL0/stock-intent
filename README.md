@@ -1,6 +1,6 @@
 # 条件研究室 · Stock Intent
 
-自然语言智能选股与策略解释器。本地MVP已可操作：预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化。用户已选择暂不公开真实金融数据，因此尚未发布公网产品。
+自然语言智能选股与策略解释器。本地MVP已可操作：预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化。公网部署仍待完成；自动审批要求对上传规范化快照至Vercel并公开展示作出明确批准。
 
 详细方案见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)，真实验证见 [数据验证记录](docs/DATA_VERIFICATION.md)。
 
@@ -117,9 +117,9 @@ npm run snapshot:build -- --report 2026-2
 
 ## Deployment
 
-推荐使用支持Next.js服务端Route Handler的托管平台。发布前依次运行四项质量检查、`npm run build`和`npm run release:check`；后者验证本地真实300只成分快照和七项覆盖，并检查三个服务端路由没有把真实快照装入部署追踪。`/api/health`实时报告快照ID、股票数、质量及LLM是否配置。应用筛选时只读取已构建的快照，不在公开请求中使用金融API Key。
+推荐使用支持Next.js服务端Route Handler的托管平台。发布前依次运行四项质量检查、`npm run build`和`npm run release:check`；后者验证本地真实300只成分快照和七项覆盖，并检查三个服务端路由均已追踪规范化快照且未追踪原始响应、验证产物或本机环境文件。`/api/health`实时报告快照ID、股票数、质量及LLM是否配置。应用筛选时只读取已构建的快照，不在公开请求中使用金融API Key。
 
-已关联Vercel项目，但尚未发布。`.vercelignore`排除全部`data/`和本地验证产物，`next.config.ts`也不额外追踪快照，防止误将真实数据上传。当前快照由Git忽略；未来只有在用户明确允许公开并确认数据服务的展示权限后，才能设计经授权的快照交付方式，并重新核对部署清单。未携带真实快照的部署无法完成本产品主链路，因此当前不发布空壳公网版本。
+已关联Vercel项目，并按用户明确授权配置了`LLM_API_KEY`生产Secret。计划公开版仅将规范化的`data/snapshots/current.json`加入服务器函数追踪；`.vercelignore`继续排除原始接口响应、验证产物及本机环境文件。快照仍由Git忽略，不进入源码仓库。`vercel deploy --dry --json`清单显示上传文件中只有这一份快照；真实部署被自动审批拦下，尚无公网URL，也没有线上验收。
 
 ## Failure handling
 
@@ -139,7 +139,7 @@ npm run snapshot:build -- --report 2026-2
 
 ## Known limitations
 
-- 尚无公网URL或远端源代码仓库；用户暂不公开真实金融数据。真实LLM只验证了少量输入，不能由此推断任意描述都正确。
+- 远端源码仓库尚未建立；真实快照上传部署被自动审批拦下，尚无公网URL。真实LLM只验证了少量输入，不能由此推断任意描述都正确。
 - 快照为partial；毛利率48只缺失、波动率4只缺失。历史披露日语义尚未核验，不支持回测。
 - 最新成分/最新估值不能支持无前视偏差的历史回测。
 - 供应商不提供的精确时点/报告期只能标未知。

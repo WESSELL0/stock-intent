@@ -14,12 +14,15 @@ async function main() {
     const path = `.next/server/app/api/${route}/route.js.nft.json`;
     const trace = JSON.parse(await readFile(path, "utf8")) as { files?: string[] };
     if (trace.files?.some(file => file.endsWith("data/snapshots/current.json"))) tracedRoutes.push(route);
+    if (trace.files?.some(file => file.includes("data/verification/") || file.includes("artifacts/") || file.endsWith(".env.local"))) {
+      throw new Error(`PRIVATE_FILE_IN_DEPLOYMENT_TRACE:${route}`);
+    }
   }
-  if (tracedRoutes.length) throw new Error(`REAL_SNAPSHOT_IN_DEPLOYMENT_TRACE:${tracedRoutes.join(",")}`);
+  if (tracedRoutes.length !== traces.length) throw new Error(`REAL_SNAPSHOT_NOT_TRACED:${tracedRoutes.join(",")}`);
   const coverage = Object.fromEntries(METRIC_IDS.map(metric => [metric,
     snapshot.stocks.filter(row => row.metrics.some(item => item.metric === metric && item.quality === "ok" && item.value !== null)).length]));
   const ageDays = Math.floor((Date.now() - Date.parse(`${snapshot.market_date}T00:00:00+08:00`)) / 86_400_000);
-  console.log(JSON.stringify({ local_snapshot_valid: true, public_real_data_release: "disabled_by_user",
+  console.log(JSON.stringify({ local_snapshot_valid: true, public_real_data_release: "prepared_pending_verification",
     snapshot_id: snapshot.snapshot_id,
     snapshot_status: snapshot.status, stock_count: snapshot.stocks.length,
     market_date: snapshot.market_date, report_period: snapshot.report_period,

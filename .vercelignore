@@ -1,5 +1,7 @@
-# User has not authorized publishing real financial data.
-data/
+# Only the normalized snapshot is uploaded for server-side screening. Raw provider responses stay local.
+data/verification
+data/snapshots/*
+!data/snapshots/current.json
 artifacts/
 .env*
 !.env.example
