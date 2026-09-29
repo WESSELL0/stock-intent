@@ -15,6 +15,7 @@
 | 真实模型 | 官方DeepSeek `deepseek-flash`解析非预设两条件，浏览器运行后300只中62 PASS、238 FAIL、0 UNKNOWN；收益保证及行业排除均被标为不支持并要求澄清。本地记录在`artifacts/phase3-llm-e2e.json` |
 | 异常注入 | `tests/finance-request.test.ts`覆盖鉴权、限流、超时、网络故障、重试、缓存续跑和损坏响应；`tests/llm-transport.test.ts`覆盖模型鉴权与畸形响应；`tests/store.test.ts`覆盖失败刷新保留旧版；HTTP路由验收覆盖超大及畸形请求 |
 | 发布数据隔离 | `npm run release:check`确认本地真实快照合法，三个服务端路由追踪规范化快照；Vercel部署清单70个文件中只有`data/snapshots/current.json`是金融数据文件，原始响应、截图和`.env.local`均未上传 |
+| 公开源码仓库 | [WESSELL0/stock-intent](https://github.com/WESSELL0/stock-intent)已建立；Git跟踪文件不含Key、原始响应或真实快照 |
 
 ## 尚未通过的题目验收
 
@@ -23,7 +24,6 @@
 | 广泛自然语言效果 | 已实测三条非预设描述，其中两条含不支持请求；仍需更多复杂、反向表达评测 |
 | 完整异常矩阵 | 已验证请求、传输、缓存、快照主要分支；尚未对全部供应商业务错误码或构建过程被杀后恢复做真实故障演练 |
 | 公网端到端 | [生产地址](https://stock-intent.vercel.app)已通过Playwright验收；线上健康接口返回300只真实股票、正确snapshot ID、partial质量及已配置模型。默认五条件改PE上限至35后为21 PASS、278 FAIL、1 UNKNOWN；非预设真实模型查询为62 PASS、238 FAIL、0 UNKNOWN |
-| 远端源码仓库 | 本地仓库已有提交，尚无远端地址；不得把Key、原始响应或真实快照提交到公开仓库 |
 | 候选人本人复核 | Agent和工具已做交叉核验；候选人本人尚未签署最终人工验证记录 |
 
 题目所说“继续比较、保存、回测或转为监控任务”为选择项：当前实现同快照条件敏感性比较，未实现保存、回测或监控。公网URL与浏览器验收均已提供。

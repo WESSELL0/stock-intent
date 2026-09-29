@@ -1,6 +1,6 @@
 # 条件研究室 · Stock Intent
 
-自然语言智能选股与策略解释器。公开可操作版本：[stock-intent.vercel.app](https://stock-intent.vercel.app)。支持预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化；2026-09-29已完成公网浏览器验收。
+自然语言智能选股与策略解释器。公开可操作版本：[stock-intent.vercel.app](https://stock-intent.vercel.app)；[源代码仓库](https://github.com/WESSELL0/stock-intent)。支持预设或DeepSeek解释意图、编辑条件、运行真实沪深300快照筛选、查看逐项证据及同快照条件变化；2026-09-29已完成公网浏览器验收。
 
 详细方案见 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)，真实验证见 [数据验证记录](docs/DATA_VERIFICATION.md)。
 
@@ -139,7 +139,7 @@ npm run snapshot:build -- --report 2026-2
 
 ## Known limitations
 
-- 远端源码仓库尚未建立；真实LLM只验证了少量输入，不能由此推断任意描述都正确。供应商对规范化数据公开展示的独立许可尚未核验。
+- 真实LLM只验证了少量输入，不能由此推断任意描述都正确。供应商对规范化数据公开展示的独立许可尚未核验。
 - 快照为partial；毛利率48只缺失、波动率4只缺失。历史披露日语义尚未核验，不支持回测。
 - 最新成分/最新估值不能支持无前视偏差的历史回测。
 - 供应商不提供的精确时点/报告期只能标未知。
