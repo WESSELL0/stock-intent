@@ -11,10 +11,11 @@
 | 字段口径 | 从五个不同行业样本的本期/上年同期原值复算营收同比与归母净利润同比，共10项，最大差异小于0.000001个百分点；记录在本地`artifacts/finance-crosscheck-5.json` |
 | 确定性引擎 | `tests/screen.test.ts`覆盖全部比较符、未舍入值边界、同指标冲突、300只三态筛选、Near Miss排除缺失、同快照差分与跨快照拒绝 |
 | 数据与模型边界 | `tests/domain.test.ts`覆盖白名单、单位、null不补零、证据、波动率窗口与异常；`tests/intent.test.ts`覆盖模型幻觉字段、伪称用户修改、假设擅自确认、冲突保留 |
-| 浏览器主链路 | 最新Playwright脚本`npm run test:e2e`已在本机生产构建完成五条件编辑、PASS/FAIL证据、UNKNOWN分区；275只数据完整的排除股票均可逐只查看失败证据；“今天”与旧快照冲突在解释页和筛选接口均被拦截；删除、新增、冲突拦截、查询修改失效均通过，无页面错误。过期警告和歧义确认以合成响应验证UI分支，日期判定另有纯函数边界测试。待此次部署后复验公网，证据在本地`artifacts/acceptance/browser.json`及同目录截图 |
+| 浏览器主链路 | 最新Playwright脚本`npm run test:e2e`已在公网生产地址完成五条件编辑、PASS/FAIL证据、UNKNOWN分区；275只数据完整的排除股票均可逐只查看失败证据；“今天”与旧快照冲突在解释页和筛选接口均被拦截；删除、新增、冲突拦截、查询修改失效均通过，无页面错误。过期警告和歧义确认以合成响应验证UI分支，日期判定另有纯函数边界测试。证据在本地`artifacts/acceptance/browser.json`及同目录截图 |
 | 真实模型 | 官方DeepSeek `deepseek-flash`解析非预设两条件，浏览器运行后300只中62 PASS、238 FAIL、0 UNKNOWN；收益保证及行业排除均被标为不支持并要求澄清。本地记录在`artifacts/phase3-llm-e2e.json` |
 | 异常注入 | `tests/finance-request.test.ts`覆盖鉴权、限流、超时、网络故障、重试、缓存续跑、请求参数变化和损坏响应；`tests/temporal-intent.test.ts`覆盖明确时间要求与快照不匹配；`tests/llm-transport.test.ts`覆盖模型鉴权与畸形响应；`tests/store.test.ts`覆盖失败刷新保留旧版；HTTP路由验收覆盖超大及畸形请求 |
-| 发布数据隔离 | `npm run release:check`确认本地真实快照合法，三个服务端路由追踪规范化快照；Vercel部署清单70个文件中只有`data/snapshots/current.json`是金融数据文件，原始响应、截图和`.env.local`均未上传 |
+| 发布数据隔离 | `npm run release:check`确认本地真实快照合法，三个服务端路由追踪规范化快照；本次Vercel部署清单74个文件中只有`data/snapshots/current.json`是金融数据文件，原始响应、截图和`.env.local`均未上传 |
+| 边界修复复验 | 公网明确“今天”请求被筛选接口以409拒绝；20条件响应从旧版约6.3 MB压缩到新版约2.28 MB且HTTP 200；公网安全响应头包含禁止嵌入、类型防嗅探和来源策略 |
 | 公开源码仓库 | [WESSELL0/stock-intent](https://github.com/WESSELL0/stock-intent)已建立；Git跟踪文件不含Key、原始响应或真实快照 |
 
 ## 尚未通过的题目验收
