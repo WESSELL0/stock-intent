@@ -121,6 +121,8 @@ npm run snapshot:build -- --report 2026-2
 
 已部署至[Vercel生产环境](https://stock-intent.vercel.app)，并将`LLM_API_KEY`配置为生产Secret。部署清单70个文件中仅`data/snapshots/current.json`是金融数据文件；`.vercelignore`排除原始接口响应、验证产物及本机环境文件。快照由Git忽略，不进入源码仓库。线上`/api/health`返回300只股票、正确snapshot ID及已配置模型；公网Playwright主链路通过。
 
+GitHub仓库不含快照，不能只从仓库自动构建出可筛选的生产版；更新数据时须先在授权环境运行`snapshot:build`，核验coverage，再从包含本地规范化快照的工作区执行Vercel部署。
+
 ## Failure handling
 
 不把null转0，不把错误转空的正常候选集。两个同比字段通过五行业真实样本交叉核验后建立明确映射，原始字段保留在证据中。缺失/错误/冲突/过期保留质量状态与原因；存在明确FAIL时同时保留未知项。
