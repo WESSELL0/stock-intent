@@ -9,6 +9,13 @@ export function parseModelIntent(text: string, originalQuery: string): NaturalLa
   if (parsed.original_query !== originalQuery) throw new Error("LLM_QUERY_MISMATCH");
   if (parsed.conditions.some(condition => condition.origin !== "ai_interpretation") ||
       parsed.assumptions.some(assumption => assumption.acknowledged)) throw new Error("LLM_INTENT_SCHEMA_INVALID");
+  const normalize = (value: string) => value.replace(/[\s“”‘’"'。？！!?、，,；;:：]/g, "");
+  const source = normalize(originalQuery);
+  if (parsed.unsupported_requests.some(item => {
+    const phrase = normalize(item.phrase);
+    return !phrase || !source.includes(phrase);
+  }))
+    throw new Error("LLM_UNGROUNDED_UNSUPPORTED");
   const deterministicConflicts = detectConflicts(parsed.conditions);
   if (!deterministicConflicts.length) return parsed;
   const newConflicts = deterministicConflicts.filter(next => !parsed.conflicts.some(existing =>

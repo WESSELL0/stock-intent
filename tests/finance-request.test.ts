@@ -43,10 +43,16 @@ test("resume reuses valid captures and refetches malformed, failed or truncated 
     const first = await request(path, [], "/test", "fixture");
     const resumed = await request(path, [], "/test", "fixture");
     assert.equal(calls, 1); assert.deepEqual(resumed, first);
+    const differentWindow = await request(path, ["--end-ms", "999999"], "/test", "fixture");
+    assert.equal(calls, 2);
+    assert.deepEqual(differentWindow?.data, { synthetic: true });
+    const refreshedValuation = await request(path, ["--end-ms", "999999"], "/test", "fixture", "new-build");
+    assert.equal(calls, 3);
+    assert.deepEqual(refreshedValuation?.data, { synthetic: true });
     for (const invalid of ["invalid-json", '{"ok":false,"data":null}', '{"ok":true,"data":{},"meta":{"truncated":true}}']) {
       await writeFile(path, invalid);
-      assert.deepEqual((await request(path, [], "/test", "fixture"))!.data, { synthetic: true });
+      assert.deepEqual((await request(path, ["--end-ms", "999999"], "/test", "fixture", "new-build"))!.data, { synthetic: true });
     }
-    assert.equal(calls, 4);
+    assert.equal(calls, 6);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

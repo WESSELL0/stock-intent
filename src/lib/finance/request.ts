@@ -1,4 +1,5 @@
-import { stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { stat, readFile, rename, writeFile } from "node:fs/promises";
 import { captureFinance, readCapture, type CapturedResponse } from "./cli";
 
 export type Capture = CapturedResponse & { retrievedAt: string };
@@ -14,12 +15,23 @@ export function createFinanceRequester(options: {
 }) {
   const capture = options.capture ?? captureFinance;
   const sleep = options.sleep ?? (ms => new Promise(resolve => setTimeout(resolve, ms)));
-  return async (path: string, args: string[], endpoint: string, target: string): Promise<Capture | null> => {
-    try { const existing = await readCapture(path); return { ...existing, retrievedAt: (await stat(path)).mtime.toISOString() }; }
+  return async (path: string, args: string[], endpoint: string, target: string, cacheScope = ""): Promise<Capture | null> => {
+    const fingerprint = createHash("sha256").update(JSON.stringify({ args, endpoint, target, cacheScope })).digest("hex");
+    const metadataPath = `${path}.request.json`;
+    try {
+      const metadata = JSON.parse(await readFile(metadataPath, "utf8")) as { fingerprint?: string; sha256?: string };
+      if (metadata.fingerprint !== fingerprint) throw new Error("CACHE_REQUEST_MISMATCH");
+      const existing = await readCapture(path);
+      if (metadata.sha256 !== existing.sha256) throw new Error("CACHE_CONTENT_MISMATCH");
+      return { ...existing, retrievedAt: (await stat(path)).mtime.toISOString() };
+    }
     catch { /* Only valid, complete envelopes count as a resumable capture. */ }
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         const response = await capture(args, path);
+        const temp = `${metadataPath}.${process.pid}.${Date.now()}.tmp`;
+        await writeFile(temp, JSON.stringify({ fingerprint, sha256: response.sha256 }), { mode: 0o600 });
+        await rename(temp, metadataPath);
         return { ...response, retrievedAt: (await stat(path)).mtime.toISOString() };
       } catch (error) {
         const code = safeCode(error);

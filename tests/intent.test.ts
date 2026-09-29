@@ -42,3 +42,12 @@ test("provider and deterministic reports of the same bound conflict appear once"
     conflicts: [modelConflict], needs_clarification: true }), query);
   assert.equal(parsed.conflicts.length, 1);
 });
+test("model may report only unsupported phrases grounded in the user's text", () => {
+  const original = "找市盈率低于20倍的公司，不要银行";
+  const grounded = { phrase: "不要银行", reason: "metric_not_supported", explanation: "当前没有行业字段" };
+  const valid = { ...intent, original_query: original, unsupported_requests: [grounded], needs_clarification: true };
+  assert.equal(parseModelIntent(JSON.stringify(valid), original).unsupported_requests.length, 1);
+  const invented = { ...grounded, phrase: "（隐含）保证未来收益" };
+  assert.throws(() => parseModelIntent(JSON.stringify({ ...valid, unsupported_requests: [grounded, invented] }), original),
+    /LLM_UNGROUNDED_UNSUPPORTED/);
+});

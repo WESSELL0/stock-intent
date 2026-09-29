@@ -115,6 +115,20 @@ try {
     await page.screenshot({ path: join(directory, "live-llm-results.png"), fullPage: true });
     await page.getByRole("link", { name: /意图与条件/ }).click();
     check("live DeepSeek interpretation, browser run and real snapshot evidence");
+    const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);
+    if (snapshot.market_date !== today) {
+      await page.locator("#query").fill("找今天PE低于20倍的沪深300公司");
+      await page.getByRole("button", { name: "解析意图", exact: true }).click();
+      await expect(page.getByRole("region", { name: "意图解释与澄清" })).toContainText(`当前快照市场日为${snapshot.market_date}`, { timeout: 45_000 });
+      await expect(page.getByRole("button", { name: "确认并运行筛选" })).toBeDisabled();
+      const bypass = await page.evaluate(async conditions => (await fetch("/api/screen", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ original_query: "找今天PE低于20倍的沪深300公司", conditions }),
+      })).status, INITIAL_PRESETS);
+      expect(bypass).toBe(409);
+      check("explicit today requirement blocked by both interpreter and deterministic screen route");
+      await page.locator("#query").fill(liveQuery);
+    }
   }
   const oversized = await page.evaluate(async () => (await fetch("/api/intent", {
     method: "POST", headers: { "Content-Type": "application/json" },

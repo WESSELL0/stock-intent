@@ -23,6 +23,21 @@ export type ScreenResponse = { snapshot: SnapshotSummary;
   run_id: string; baseline_conditions: Condition[]; applied_conditions: Condition[]; counts: { total: number; pass: number; fail: number; unknown: number }; results: ResultView[];
   near_miss_codes: string[]; sensitivity: { snapshot_id: string; before_count: number; after_count: number;
     newly_included: string[]; newly_excluded: string[]; unknown_before_count: number; unknown_after_count: number } | null };
+type WireResult = Omit<ResultView, "metrics" | "condition_results"> & {
+  metrics: Record<MetricId, { value: number | null; quality: string; evidence: EvidenceView }>;
+  condition_results: Array<{ condition_id: string; status: "PASS" | "FAIL" | "UNKNOWN"; actual_value: number | null; reason: string }> };
+type WireScreenResponse = Omit<ScreenResponse, "results"> & { results: WireResult[] };
+function expandScreenResponse(wire: WireScreenResponse): ScreenResponse {
+  const byId = new Map(wire.applied_conditions.map(condition => [condition.id, condition]));
+  return { ...wire, results: wire.results.map(row => ({ ...row,
+    condition_results: row.condition_results.map(item => {
+      const condition = byId.get(item.condition_id);
+      const evidence = condition ? row.metrics[condition.metric]?.evidence : undefined;
+      if (!condition || !evidence) throw new Error("筛选证据与条件不匹配");
+      return { condition, status: item.status, actual_value: item.actual_value, reason: item.reason, evidence };
+    }),
+  })) };
+}
 type Workspace = { query: string; setQuery: (value: string) => void; parsed: boolean; parsing: boolean; parseIntent: () => Promise<void>;
   intent: NaturalLanguageIntent | null; interpreter: "preset" | "llm" | null; clarificationRequired: boolean;
   confirmInterpretation: () => void;
@@ -96,7 +111,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "筛选失败");
       if (attempt !== generation.current) return false;
-      setResult(payload as ScreenResponse); return true;
+      setResult(expandScreenResponse(payload as WireScreenResponse)); return true;
     } catch (reason) { setError(reason instanceof Error ? reason.message : "筛选失败"); return false; }
     finally { setRunning(false); }
   }, [parsed, clarificationRequired, parsing, conditions, conflicts, query, baseline]);

@@ -32,8 +32,8 @@ export async function buildMarketSnapshot(reportInput: string, onProgress: (mess
   let retries = 0;
   await mkdir(runDirectory, { recursive: true });
   const capturedRequest = createFinanceRequester({ onFailure: failure => failures.push(failure), onRetry: () => { retries++; } });
-  function request(label: string, args: string[], endpoint: string, target: string): Promise<Capture | null> {
-    return capturedRequest(join(runDirectory, `${label}.json`), args, endpoint, target);
+  function request(label: string, args: string[], endpoint: string, target: string, cacheScope = ""): Promise<Capture | null> {
+    return capturedRequest(join(runDirectory, `${label}.json`), args, endpoint, target, cacheScope);
   }
   const memberCapture = await request("constituents", ["index", "constituents", "--thscode", "000300.SH"], "/api/a-share-index/constituents/ths-stock-list", "000300.SH");
   if (!memberCapture) throw new Error("INDEX_CONSTITUENTS_UNAVAILABLE");
@@ -65,7 +65,7 @@ export async function buildMarketSnapshot(reportInput: string, onProgress: (mess
   for (let batch = 0; batch < 3; batch++) {
     const group = members.slice(batch * 100, (batch + 1) * 100);
     const endpoint = "/api/a-share/valuations/snapshot";
-    const capture = await request(`valuation/batch-${batch + 1}`, ["valuation", "snapshot", "--thscodes", group.map(stock => stock.thscode).join(",")], endpoint, `batch-${batch + 1}`);
+    const capture = await request(`valuation/batch-${batch + 1}`, ["valuation", "snapshot", "--thscodes", group.map(stock => stock.thscode).join(",")], endpoint, `batch-${batch + 1}`, `build-${started}`);
     let batchCapture: Capture | null = capture;
     if (capture) {
       try { const data = ProviderValuationsSchema.parse(capture.data); if (data.total !== data.item.length || data.item.some(row => !group.some(stock => stock.thscode === row.thscode))) throw new Error("VALUATION_BATCH_CONFLICT"); }

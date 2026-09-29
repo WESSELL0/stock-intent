@@ -41,7 +41,7 @@ export const NaturalLanguageIntentSchema = z.strictObject({
   })).max(30),
   unsupported_requests: z.array(z.strictObject({
     phrase: z.string().min(1),
-    reason: z.enum(["metric_not_supported", "universe_not_supported", "logic_not_supported", "compliance_boundary"]),
+    reason: z.enum(["metric_not_supported", "universe_not_supported", "logic_not_supported", "data_time_not_supported", "compliance_boundary"]),
     explanation: z.string().min(1),
   })).max(30),
   conflicts: z.array(z.strictObject({
