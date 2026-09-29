@@ -114,13 +114,13 @@ npm run snapshot:build -- --report 2026-2
 
 已有40项自动测试，覆盖指标白名单、模型传输异常、模型虚构附加要求拦截、时间条件与快照不匹配及否定表达、请求体上限、金融接口重试、不可变原始证据、缓存续跑、失败刷新保留旧快照、三态筛选、波动率边界和快照日期提醒。
 
-本机生产构建可运行`npm run test:e2e`复测浏览器主链路；先安装Playwright Chromium（`npx playwright install chromium`），或将`PLAYWRIGHT_CHROMIUM_EXECUTABLE`设为本机Chrome可执行文件。服务器配置DeepSeek密钥时还会测试非预设输入。2026-09-29已针对本机最终快照完成验收，记录位于本地`artifacts/acceptance/browser.json`与截图。
+本机生产构建可运行`npm run test:e2e`复测浏览器主链路；先安装Playwright Chromium（`npx playwright install chromium`），或将`PLAYWRIGHT_CHROMIUM_EXECUTABLE`设为本机Chrome可执行文件。服务器配置DeepSeek密钥时还会测试非预设输入。2026-09-29已针对本机及最终公网快照完成验收，记录位于本地`artifacts/acceptance/browser.json`与截图。
 
 ## Deployment
 
 推荐使用支持Next.js服务端Route Handler的托管平台。发布前依次运行四项质量检查、`npm run build`和`npm run release:check`；后者验证本地真实300只成分快照和七项覆盖，并检查三个服务端路由均已追踪规范化快照且未追踪原始响应、验证产物或本机环境文件。`/api/health`实时报告快照ID、股票数、质量及LLM是否配置。应用筛选时只读取已构建的快照，不在公开请求中使用金融API Key。
 
-已部署至[Vercel生产环境](https://stock-intent.vercel.app)，并将`LLM_API_KEY`配置为生产Secret。部署清单中仅`data/snapshots/current.json`是金融数据文件；`.vercelignore`排除原始接口响应、验证产物及本机环境文件。快照由Git忽略，不进入源码仓库。线上`/api/health`返回300只股票、正确snapshot ID及已配置模型；公网Playwright主链路通过。
+已部署至[Vercel生产环境](https://stock-intent.vercel.app)，并将`LLM_API_KEY`配置为生产Secret。`.vercelignore`只允许规范化的`data/snapshots/current.json`进入发布包，排除原始接口响应、验证产物及本机环境文件；源代码仓库也不跟踪快照。最新生产部署已准备完成，线上`/api/health`回读`snap-2026-09-29-2026-2-4f5db3320b0d`、300只股票及已配置模型；公网Playwright主链路通过。私有路径`.env.local`、`.git/config`和快照原文件均返回404。
 
 Vercel项目防火墙已对`/api/intent`启用按IP的固定窗口限制：每60秒最多20次，超额拒绝1分钟。该规则在Vercel项目设置中管理，不属于Git仓库配置；迁移到其他平台时须另行配置。
 
